@@ -1,65 +1,91 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Registro de Autos MUESTRA</title>
-    <!-- Incluir el SDK de Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js"></script>
-  </head>
-  <body>
-    <!-- Formulario para el registro de autos -->
-    <h1>Registro de Autos</h1>
-    <button id="registroAutoBtn">Registrar Auto</button>
-    
-    <!-- Script de Firebase y lógica de aplicación -->
-    <script>
-      // Configuración de Firebase
-      const firebaseConfig = {
-           apiKey: "AIzaSyC1YGqAlWirgjr3KSVV0LU358riVwmX6q8",
-    authDomain: "registroautos-maria.firebaseapp.com",
-    projectId: "registroautos-maria",
-    storageBucket: "registroautos-maria.appspot.com",
-    messagingSenderId: "1032038307825",
-    appId: "1:1032038307825:web:4d1a0f1e225c28c7965650",
-    measurementId: "G-K8XPFF93HY"
-      };
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carro en Espera</title>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
 
-      // Inicializar Firebase
-      const app = firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1YGqAlWirgjr3KSVV0LU358riVwmX6q8",
+            authDomain: "registroautos-maria.firebaseapp.com",
+            projectId: "registroautos-maria",
+            storageBucket: "registroautos-maria.appspot.com",
+            messagingSenderId: "1032038307825",
+            appId: "1:1032038307825:web:4d1a0f1e225c28c7965650",
+            measurementId: "G-K8XPFF93HY"
+        };
 
-      // Referencia a la colección de autos
-      const autosRef = db.collection('autos');
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
 
-      // Función para registrar auto con número de ingreso automático
-      function registrarAutoConNumero() {
-        // Obtener la cantidad actual de autos registrados
-        autosRef.get().then((querySnapshot) => {
-          const numeroIngreso = querySnapshot.size + 1; // Calcula el siguiente número de ingreso
+        // Función para agregar un auto a la colección "autos"
+        async function agregarAuto(auto) {
+            try {
+                await addDoc(collection(db, "autos"), auto);
+                console.log("Auto agregado con éxito.");
+            } catch (error) {
+                console.error("Error al agregar auto:", error);
+            }
+        }
 
-          // Crear el objeto del auto con el número de ingreso y la hora de entrada del servidor
-          const nuevoAuto = {
-            numeroIngreso: numeroIngreso,
-            horaEntrada: firebase.firestore.FieldValue.serverTimestamp(),
-          };
+        // Función para obtener todos los autos en tiempo real
+        function obtenerAutosEnTiempoReal() {
+            const autosRef = collection(db, "autos");
+            // Ordenar por el campo timestamp en orden ascendente
+            const q = query(autosRef, orderBy("timestamp"));
+            onSnapshot(q, (snapshot) => {
+                const autosContainer = document.getElementById("autos-container");
+                autosContainer.innerHTML = ""; // Limpiar lista
 
-          // Registrar el auto en Firestore
-          autosRef.add(nuevoAuto).then(() => {
-            console.log("Auto registrado exitosamente con número de ingreso:", numeroIngreso);
-            alert("Auto registrado exitosamente con número de ingreso: " + numeroIngreso);
-          }).catch((error) => {
-            console.error("Error al registrar el auto: ", error);
-          });
+                snapshot.forEach((doc) => {
+                    const autoData = doc.data();
+                    const autoElement = document.createElement("div");
+                    autoElement.textContent = `Auto: ${autoData.placa}, Llegada: ${autoData.horaLlegada}`;
+                    autosContainer.appendChild(autoElement);
+                });
+            });
+        }
 
-        }).catch((error) => {
-          console.error("Error al obtener la cantidad de autos registrados: ", error);
+        document.addEventListener("DOMContentLoaded", () => {
+            obtenerAutosEnTiempoReal(); // Llamar a la función para obtener los datos en tiempo real
+
+            const form = document.getElementById("auto-form");
+            form.addEventListener("submit", (event) => {
+                event.preventDefault();
+                const placaInput = document.getElementById("placa-input");
+                const placa = placaInput.value;
+
+                if (placa) {
+                    agregarAuto({
+                        placa: placa,
+                        horaLlegada: new Date().toLocaleTimeString(),
+                        timestamp: new Date() // Agregar el campo de marca de tiempo
+                    });
+                    placaInput.value = "";
+                } else {
+                    alert("Por favor, ingresa una matrícula.");
+                }
+            });
         });
-      }
-
-      // Evento de clic para el botón de registro de autos
-      document.getElementById('registroAutoBtn').addEventListener('click', registrarAutoConNumero);
-
     </script>
-  </body>
+</head>
+<body>
+    <h1>Autos en Espera</h1>
+
+    <!-- Formulario para agregar autos -->
+    <form id="auto-form">
+        <label for="placa-input">Matrícula del Auto:</label>
+        <input type="text" id="placa-input" placeholder="Ingresa la matrícula" required>
+        <button type="submit">Registrar Llegada</button>
+    </form>
+
+    <div id="autos-container"></div>
+</body>
 </html>
