@@ -25,6 +25,28 @@
         const analytics = getAnalytics(app);
         const db = getFirestore(app);
 
+        // Configurar el proveedor de Google
+      const provider = new firebase.GoogleAuthProvider();
+
+      // Función para iniciar sesión con Google
+      function loginWithGoogle() {
+        firebase.signInWithPopup(auth, provider)
+          .then((result) => {
+            // Usuario autenticado exitosamente
+            const user = result.user;
+            console.log("Usuario autenticado:", user);
+            alert("¡Bienvenido, " + user.displayName + "!");
+          })
+          .catch((error) => {
+            console.error("Error de autenticación:", error);
+            alert("Error de autenticación: " + error.message);
+          });
+      }
+
+      // Llama a la función de login cuando el usuario haga clic en el botón de inicio de sesión
+      document.getElementById('loginBtn').addEventListener('click', loginWithGoogle);
+    
+
         // Función para agregar un auto a la colección "autos"
         async function agregarAuto(auto) {
             try {
@@ -74,6 +96,9 @@
     </script>
 </head>
 <body>
+
+      <!-- Botón para iniciar sesión con Google -->
+    <button id="loginBtn">Iniciar sesión con Google</button>
     <h1>Autos en Espera</h1>
 
     <!-- Formulario para agregar autos -->
