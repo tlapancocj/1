@@ -1,42 +1,32 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-
-   
-    
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carro en Espera</title>
-
-     
-      <!-- Botón para iniciar sesión con Google -->
+<html>
+  <head>
+    <title>Autenticación con Firebase</title>
+    <!-- Incluir el SDK de Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js"></script>
+  </head>
+  <body>
+    <!-- Botón para iniciar sesión con Google -->
     <button id="loginBtn">Iniciar sesión con Google</button>
-    <h1>Autos en Espera</h1>
 
-
-    
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
-
-        // Configuración de Firebase
-        const firebaseConfig = {
-           apiKey: "AIzaSyC1YGqAlWirgjr3KSVV0LU358riVwmX6q8",
+    <script>
+      // Configuración de Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyC1YGqAlWirgjr3KSVV0LU358riVwmX6q8",
     authDomain: "registroautos-maria.firebaseapp.com",
     projectId: "registroautos-maria",
     storageBucket: "registroautos-maria.appspot.com",
     messagingSenderId: "1032038307825",
     appId: "1:1032038307825:web:4d1a0f1e225c28c7965650",
     measurementId: "G-K8XPFF93HY"
-        };
+      };
 
-        // Inicializar Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const db = getFirestore(app);
+      // Inicializar Firebase
+      const app = firebase.initializeApp(firebaseConfig);
+      const auth = firebase.getAuth(app);
 
-        // Configurar el proveedor de Google
+      // Configurar el proveedor de Google
       const provider = new firebase.GoogleAuthProvider();
 
       // Función para iniciar sesión con Google
@@ -56,66 +46,6 @@
 
       // Llama a la función de login cuando el usuario haga clic en el botón de inicio de sesión
       document.getElementById('loginBtn').addEventListener('click', loginWithGoogle);
-    
-
-        // Función para agregar un auto a la colección "autos"
-        async function agregarAuto(auto) {
-            try {
-                await addDoc(collection(db, "autos"), auto);
-                console.log("Auto agregado con éxito.");
-            } catch (error) {
-                console.error("Error al agregar auto:", error);
-            }
-        }
-
-        // Función para obtener todos los autos en tiempo real
-        function obtenerAutosEnTiempoReal() {
-            const autosRef = collection(db, "autos");
-            onSnapshot(autosRef, (snapshot) => {
-                const autosContainer = document.getElementById("autos-container");
-                autosContainer.innerHTML = ""; // Limpiar lista
-
-                snapshot.forEach((doc) => {
-                    const autoData = doc.data();
-                    const autoElement = document.createElement("div");
-                    autoElement.textContent = `Auto: ${autoData.placa}, Llegada: ${autoData.horaLlegada}`;
-                    autosContainer.appendChild(autoElement);
-                });
-            });
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            obtenerAutosEnTiempoReal(); // Llamar a la función para obtener los datos en tiempo real
-
-            const form = document.getElementById("auto-form");
-            form.addEventListener("submit", (event) => {
-                event.preventDefault();
-                const placaInput = document.getElementById("placa-input");
-                const placa = placaInput.value;
-
-                if (placa) {
-                    agregarAuto({
-                        placa: placa,
-                        horaLlegada: new Date().toLocaleTimeString()
-                    });
-                    placaInput.value = "";
-                } else {
-                    alert("Por favor, ingresa una matrícula.");
-                }
-            });
-        });
     </script>
-</head>
-<body>
-
-
-    <!-- Formulario para agregar autos -->
-    <form id="auto-form">
-        <label for="placa-input">Matrícula del Auto:</label>
-        <input type="text" id="placa-input" placeholder="Ingresa la matrícula" required>
-        <button type="submit">Registrar Llegada</button>
-    </form>
-
-    <div id="autos-container"></div>
-</body>
+  </body>
 </html>
