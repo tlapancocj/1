@@ -26,6 +26,31 @@
       const app = firebase.initializeApp(firebaseConfig);
       const auth = firebase.getAuth(app);
 
+
+
+// Referencia al documento donde se guardará la hora de entrada
+const userEntryRef = db.collection('usuarios').doc('userID'); // Reemplaza 'userID' con el ID del usuario o un identificador único
+
+// Registrar la hora de entrada con el timestamp del servidor
+userEntryRef.set({
+  horaEntrada: firebase.firestore.FieldValue.serverTimestamp()
+}, { merge: true })
+.then(() => {
+  console.log("Hora de entrada registrada exitosamente con el timestamp del servidor.");
+})
+.catch((error) => {
+  console.error("Error al registrar la hora de entrada: ", error);
+});
+
+
+
+      
+
+
+
+
+      
+
       // Configurar el proveedor de Google
       const provider = new firebase.GoogleAuthProvider();
 
