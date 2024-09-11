@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carro en Espera</title>
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
@@ -38,11 +39,10 @@
         // Función para obtener todos los autos en tiempo real
         function obtenerAutosEnTiempoReal() {
             const autosRef = collection(db, "autos");
-            // Ordenar por el campo timestamp en orden ascendente
             const q = query(autosRef, orderBy("timestamp"));
             onSnapshot(q, (snapshot) => {
                 const autosContainer = document.getElementById("autos-container");
-                autosContainer.innerHTML = ""; // Limpiar lista
+                autosContainer.innerHTML = "";
 
                 snapshot.forEach((doc) => {
                     const autoData = doc.data();
@@ -54,7 +54,7 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            obtenerAutosEnTiempoReal(); // Llamar a la función para obtener los datos en tiempo real
+            obtenerAutosEnTiempoReal();
 
             const form = document.getElementById("auto-form");
             form.addEventListener("submit", (event) => {
@@ -66,18 +66,111 @@
                     agregarAuto({
                         placa: placa,
                         horaLlegada: new Date().toLocaleTimeString(),
-                        timestamp: new Date() // Agregar el campo de marca de tiempo
+                        timestamp: new Date()
                     });
                     placaInput.value = "";
                 } else {
                     alert("Por favor, ingresa una matrícula.");
                 }
             });
+
+            // Configurar el lector de QR
+            const qrCodeScanner = new Html5Qrcode("qr-reader");
+
+            document.getElementById("start-qr").addEventListener("click", () => {
+                qrCodeScanner.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10,
+                        qrbox: 250
+                    },
+                    (decodedText, decodedResult) => {
+                        // Parar el escaneo
+                        qrCodeScanner.stop().catch(err => console.error(err));
+                        const placaInput = document.getElementById("placa-input");
+                        placaInput.value = decodedText; // Suponiendo que el QR contiene la matrícula del auto
+                        document.getElementById("auto-form").dispatchEvent(new Event("submit"));
+                    },
+                    (errorMessage) => {
+                        // Manejar errores de escaneo
+                        console.error(errorMessage);
+                    }
+                ).catch(err => console.error(err));
+            });
         });
     </script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            background-color: #003366; /* Azul marino */
+            color: white;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            font-size: 1.2em;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #0066cc; /* Azul más claro */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #004c99; /* Azul aún más oscuro */
+        }
+
+        #autos-container {
+            margin-top: 20px;
+            width: 90%;
+            max-width: 500px;
+            text-align: left;
+        }
+
+        #qr-reader {
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            h1, form, #autos-container {
+                width: 90%;
+            }
+
+            input[type="text"], button {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Autos en Espera</h1>
+    <h1>Sala de espera PRIMARIA</h1>
 
     <!-- Formulario para agregar autos -->
     <form id="auto-form">
@@ -85,6 +178,10 @@
         <input type="text" id="placa-input" placeholder="Ingresa la matrícula" required>
         <button type="submit">Registrar Llegada</button>
     </form>
+
+    <!-- Contenedor para el lector de QR -->
+    <div id="qr-reader" style="width: 300px; height: 300px;"></div>
+    <button id="start-qr">Iniciar Lector QR</button>
 
     <div id="autos-container"></div>
 </body>
